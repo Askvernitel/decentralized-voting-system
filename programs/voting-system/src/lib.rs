@@ -15,6 +15,9 @@ pub mod voting_system {
 
         Ok(())
     }
+
+    pub fn initialize_candidate(ctx:Context<InitCandidate>){ 
+    }
     /*
     pub fn vote(ctx: Context<Vote>, poll_id:u64) -> Result<()>{
         Ok(())
@@ -39,6 +42,35 @@ pub struct InitPoll<'info> {
 
     pub system_program: Program<'info, System>,
 }
+
+#[derive(Accounts)]
+#[instruction(poll_id:u64, candidate_id:u64)]
+pub struct InitCandidate<'info>{ 
+    #[account(mut)]
+    pub signer: Signer<'info>
+
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + Candidate::INIT_SPACE,
+        seeds = [poll_id.to_le_bytes().as_ref(), candidate_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub candidate: Account<'info, Candidate>
+
+    pub system_program: Program<'info, System>,
+}
+
+
+#[account]
+#[derive(InitSpace)]
+pub struct Candidate {
+    pub name: String,
+    pub poll_id:u64,
+    pub candidate_id:u64,
+}
+
+
 
 #[account]
 #[derive(InitSpace)]
