@@ -16,12 +16,21 @@ pub mod voting_system {
         Ok(())
     }
 
-    pub fn initialize_candidate(ctx:Context<InitCandidate>){ 
-    }
-    /*
-    pub fn vote(ctx: Context<Vote>, poll_id:u64) -> Result<()>{
+    pub fn initialize_candidate(ctx:Context<InitCandidate>, _poll_id:u64, candidate_name:String) -> Result<()>{
+        ctx.accounts.candidate.candidate_name = candidate_name;
+        ctx.accounts.candidate.candidate_votes = 0;
+        ctx.accounts.poll.candidate_amount += 1;
+
         Ok(())
-    }*/
+    }
+
+    pub fn vote(ctx: Context<Vote>, _poll_id:u64, _candidate_name:String) -> Result<()>{
+        let candidate = &mut ctx.accounts.candidate;
+        candidate.candidate_votes += 1;
+        msg!("Candidate Name: {}", candidate.candidate_name);
+        msg!("Candidate Votes: {}", candidate.candidate_votes);
+        Ok(())
+    }
 
 }
 
@@ -44,30 +53,50 @@ pub struct InitPoll<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(poll_id:u64, candidate_id:u64)]
+#[instruction(poll_id:u64, candidate_name:String)]
 pub struct InitCandidate<'info>{ 
     #[account(mut)]
-    pub signer: Signer<'info>
+    pub signer: Signer<'info>,
+    
+    #[account(
+        mut,
+        seeds = [poll_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub poll: Account<'info, Poll>,
 
     #[account(
         init,
         payer = signer,
         space = 8 + Candidate::INIT_SPACE,
-        seeds = [poll_id.to_le_bytes().as_ref(), candidate_id.to_le_bytes().as_ref()],
+        seeds = [poll_id.to_le_bytes().as_ref(), candidate_name.as_bytes()],
         bump
     )]
-    pub candidate: Account<'info, Candidate>
+    pub candidate: Account<'info, Candidate>,
 
     pub system_program: Program<'info, System>,
 }
+#[derive(Accounts)]
+#[instruction(poll_id:u64, candidate_name:String)]
+pub struct Vote<'info>{
+    signer: Signer<'info>,
 
+    #[account(
+    mut,
+    seeds = [poll_id.to_le_bytes().as_ref(), candidate_name.as_bytes()],
+    bump
+    )]
+    pub candidate: Account<'info, Candidate>,
+
+}
 
 #[account]
 #[derive(InitSpace)]
-pub struct Candidate {
-    pub name: String,
-    pub poll_id:u64,
-    pub candidate_id:u64,
+pub struct Candidate
+{
+    #[max_len(32)]
+    pub candidate_name: String,
+    pub candidate_votes: u64,
 }
 
 

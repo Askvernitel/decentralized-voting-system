@@ -2,24 +2,29 @@ import { BankrunProvider, startAnchor } from "anchor-bankrun";
 import {VotingSystem} from "../target/types/voting_system";
 import { BN, Program } from "@coral-xyz/anchor";
 import {PublicKey} from "@solana/web3.js"
+import {before} from "mocha";
 
 const IDL = require("../target/idl/voting_system.json");
 const votingAddress = new PublicKey("F23EhRjr5qS5EYJ9cCTdeTA73EgAKYRh1Dbu15Zgawb");
 
 describe("initialize test", async () => {
-  it("", async ()=>{
-        //anchor.setProvider(anchor.AnchorProvider.env());
-        const context = await startAnchor("", [{name:"voting_system", programId:votingAddress}],[]);
+    let context;
+    let provider
+    let votingProgram;
 
-        const provider = new BankrunProvider(context);
+    before("Before All", async ()=>{
+        context = await startAnchor("", [{name:"voting_system", programId:votingAddress}],[]);
+        provider = new BankrunProvider(context);
+        votingProgram = new Program<VotingSystem>(IDL,  provider);
+    })
 
-        const votingProgram = new Program<VotingSystem>(IDL,  provider);
+    it("voting initialization", async ()=>{
         await votingProgram.methods.initializePoll(
         new BN(1),
         "Check",
         new BN(1771704943),
         new BN(1771704943 + 3600),
-        new BN(3),
+        new BN(0),
         ).rpc();
 
         const [pollAddress] = PublicKey.findProgramAddressSync(
@@ -30,8 +35,41 @@ describe("initialize test", async () => {
         console.log(new BN(1).toArrayLike(Buffer, "le", 8));
         const poll = await votingProgram.account.poll.fetch(pollAddress);
 
-        console.log(poll);
+        console.log("Poll: ", poll);
+    });
 
-        //const program = anchor.workspace.VotingSystem as Program<VotingSystem>;
-  });
+    it("candidate initialization", async()=>{
+        await votingProgram.methods.initializeCandidate(new BN(1), "Daniel").rpc();
+
+        const [candidateAddress] = PublicKey.findProgramAddressSync(
+            [new BN(1).toArrayLike(Buffer, "le", 8), Buffer.from("Daniel")],
+            votingAddress
+        )
+        const [pollAddress] = PublicKey.findProgramAddressSync(
+            [new BN(1).toArrayLike(Buffer, "le", 8)],
+            votingAddress
+        );
+
+        const candidate = await votingProgram.account.candidate.fetch(candidateAddress);
+        const poll = await votingProgram.account.poll.fetch(pollAddress);
+
+        console.log("Candidate: ", candidate);
+        console.log("Poll: ", poll);
+    });
+
+
+    it("vote", async()=>{
+        await votingProgram.methods.vote(new BN(1), "Daniel").rpc();
+
+
+        const [candidateAddress] = PublicKey.findProgramAddressSync(
+            [new BN(1).toArrayLike(Buffer, "le", 8), Buffer.from("Daniel")],
+            votingAddress
+        )
+
+        const candidate = await votingProgram.account.candidate.fetch(candidateAddress);
+
+        console.log("Voted Candidate: ", candidate);
+    })
+
 });
