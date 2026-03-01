@@ -1,18 +1,18 @@
 [toolchain]
-package_manager = "yarn"
+package_manager = "npm"
 
 [features]
 resolution = true
 skip-lint = false
 
 [programs.localnet]
-voting_system = "F23EhRjr5qS5EYJ9cCTdeTA73EgAKYRh1Dbu15Zgawb"
+voting_system = "DjqR34cfmyTkMzMAHSR1i5ziWxGWAtKkX6XPtRKp3d3b"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
