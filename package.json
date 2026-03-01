@@ -2,16 +2,20 @@
   "license": "ISC",
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+    "start": "npx next build ./web && npx next start ./web"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
-    "anchor-bankrun": "^0.5.0"
+    "@solana/actions": "^1.6.6",
+    "anchor-bankrun": "^0.5.0",
+    "next": "^16.1.6"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.0.0",
+    "@types/react": "19.2.14",
     "chai": "^4.3.4",
     "mocha": "^9.0.3",
     "prettier": "^2.6.2",
